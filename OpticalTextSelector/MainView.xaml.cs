@@ -8,9 +8,7 @@ namespace OpticalTextSelector
         {
             InitializeComponent();
 
-            var viewModel = new MainViewModel();
-            viewModel.window = this;
-            viewModel.canvas = canvas;
+            var viewModel = new MainViewModel(this.canvas);
 
             this.DataContext = viewModel;
         }
