@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 
 namespace OpticalTextSelector
 {
@@ -34,12 +36,14 @@ namespace OpticalTextSelector
 
             foreach (var item in this.wordDictionary)
             {
-                if (rect.Contains(item.Key))
+                if (rect.IntersectsWith(item.Key))
                 {
                     var selection = createSelection(item.Key);
                     this.canvas.Children.Add(selection);
-                    Canvas.SetTop(selection, item.Key.X);
-                    Canvas.SetLeft(selection, item.Key.Y);
+                    Canvas.SetLeft(selection, item.Key.X);
+                    Canvas.SetTop(selection, item.Key.Y + (item.Key.Height / 2));
+
+                    Debug.WriteLine($"{item.Value}, {rect}");
                 }
             }
         }
@@ -49,8 +53,9 @@ namespace OpticalTextSelector
             var selection = new System.Windows.Shapes.Rectangle();
             selection.Width = rect.Width;
             selection.Height = rect.Height;
-            selection.Stroke = System.Windows.Media.Brushes.Red;
-            selection.StrokeThickness = 1;
+            //selection.Stroke = System.Windows.Media.Brushes.Red;
+            //selection.StrokeThickness = 1;
+            selection.Fill = new SolidColorBrush(System.Windows.Media.Color.FromArgb(125, 255, 0, 0));
             return selection;
         }
     }

@@ -28,7 +28,7 @@ namespace OpticalTextSelector
             this.selectionManager = new SelectionManager(canvas);
 
             this.keyboardHook.events
-                .Where(e => e != null && e.Key == System.Windows.Forms.Keys.W && e.Control && e.IsKeyDown)
+                .Where(e => e != null && e.Key == System.Windows.Forms.Keys.Q && e.Control && e.IsKeyDown)
                 .Throttle(TimeSpan.FromMilliseconds(50))
                 .ObserveOnDispatcher()
                 .Subscribe(e =>
@@ -37,7 +37,7 @@ namespace OpticalTextSelector
 
                 if (this.isActive)
                 {
-                    //this.Background.Value = new SolidColorBrush(Color.FromArgb(1, 0, 0, 0));
+                    this.Background.Value = new SolidColorBrush(Color.FromArgb(1, 0, 0, 0));
 
                     if (this.tesseractManager.Process())
                     {

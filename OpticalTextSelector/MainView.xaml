@@ -26,7 +26,7 @@
                 <prism:InvokeCommandAction Command="{Binding MouseLeftButtonDownCommand}" />
             </i:EventTrigger>
         </i:Interaction.Triggers>
-        <Image Source="{Binding ImageSource.Value}" />
+        <Image Source="{Binding ImageSource.Value}" Stretch="None" />
         <Canvas x:Name="canvas" Background="{Binding Background.Value}" />
     </Grid>
 </Window>

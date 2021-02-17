@@ -48,6 +48,7 @@ namespace OpticalTextSelector
                 var bitmap = new Bitmap(bounds.Width, bounds.Height);
                 var graphics = Graphics.FromImage(bitmap);
                 graphics.CopyFromScreen(bounds.Left, bounds.Top, 0, 0, bounds.Size);
+                bitmap.Save("test.png");
                 return bitmap;
             }
             catch (Exception e)
