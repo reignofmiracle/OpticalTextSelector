@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Windows.Media.Imaging;
 using Tesseract;
@@ -10,16 +11,18 @@ namespace OpticalTextSelector
 {
     public class TesseractManager
     {
+        Canvas canvas;
         TesseractEngine tesseractEngine;
 
-        public TesseractManager(string tessdata)
+        public TesseractManager(Canvas canvas, string tessdata)
         {
+            this.canvas = canvas;
             this.tesseractEngine = new TesseractEngine(tessdata, "eng", EngineMode.Default);
         }
 
         public BitmapImage BitmapImage { get; private set; }
 
-        public Dictionary<System.Windows.Rect, string> WordDictionary { get; private set; }
+        public List<ResultWord> ResultWords { get; private set; }
 
         public bool Process()
         {
@@ -44,11 +47,15 @@ namespace OpticalTextSelector
         {
             try
             {
+                var position = this.canvas.PointToScreen(new System.Windows.Point(0, 0));
+                var left = (int)position.X;
+                var top = (int)position.Y;
+                var width = (int)this.canvas.ActualWidth;
+                var height = (int)this.canvas.ActualHeight;
                 var bounds = Screen.AllScreens[0].Bounds;
-                var bitmap = new Bitmap(bounds.Width, bounds.Height);
+                var bitmap = new Bitmap(width, height);
                 var graphics = Graphics.FromImage(bitmap);
-                graphics.CopyFromScreen(bounds.Left, bounds.Top, 0, 0, bounds.Size);
-                bitmap.Save("test.png");
+                graphics.CopyFromScreen(left, top, 0, 0, new Size(width, height));
                 return bitmap;
             }
             catch (Exception e)
@@ -66,7 +73,7 @@ namespace OpticalTextSelector
                 {
                     var pageIteratorLevel = PageIteratorLevel.Word;
 
-                    var wordDictionary = new Dictionary<System.Windows.Rect, string>();
+                    var resultWords = new List<ResultWord>();
 
                     using (var iter = page.GetIterator())
                     {
@@ -74,17 +81,24 @@ namespace OpticalTextSelector
 
                         do
                         {
-                            var content = iter.GetText(pageIteratorLevel);
+                            var text = iter.GetText(pageIteratorLevel).Trim();
+                            if (text.Length == 0)
+                            {
+                                continue;
+                            }
 
                             Rect boundingBox;
                             if (iter.TryGetBoundingBox(pageIteratorLevel, out boundingBox))
                             {
-                                wordDictionary.Add(Convert(boundingBox), content);
+                                var result = new ResultWord();
+                                result.Text = text;
+                                result.BoundingBox = Convert(boundingBox);
+                                resultWords.Add(result);
                             }
                         } while (iter.Next(PageIteratorLevel.Word));
                     }
 
-                    this.WordDictionary = wordDictionary;
+                    this.ResultWords = resultWords;
                 }
             }
         }
@@ -92,6 +106,11 @@ namespace OpticalTextSelector
         private System.Windows.Rect Convert(Rect rect)
         {
             return new System.Windows.Rect(rect.X1, rect.Y1, rect.Width, rect.Height);
-        }
+        }        
+    }
+    public class ResultWord
+    {
+        public string Text { get; set; }
+        public System.Windows.Rect BoundingBox { get; set; }
     }
 }

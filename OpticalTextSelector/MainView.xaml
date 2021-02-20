@@ -8,25 +8,79 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
     Title="MainWindow"
+    Width="1000"
+    Height="1000"
     AllowsTransparency="True"
-    Background="{Binding Background.Value}"
+    Background="{Binding WindowBackground.Value}"
+    ResizeMode="CanResizeWithGrip"
     Topmost="True"
-    WindowState="Maximized"
     WindowStyle="None"
     mc:Ignorable="d">
-    <Grid>
-        <i:Interaction.Triggers>
-            <i:EventTrigger EventName="MouseMove">
-                <prism:InvokeCommandAction Command="{Binding MouseMoveCommand}" />
-            </i:EventTrigger>
-            <i:EventTrigger EventName="MouseLeftButtonUp">
-                <prism:InvokeCommandAction Command="{Binding MouseLeftButtonUpCommand}" />
-            </i:EventTrigger>
-            <i:EventTrigger EventName="MouseLeftButtonDown">
-                <prism:InvokeCommandAction Command="{Binding MouseLeftButtonDownCommand}" />
-            </i:EventTrigger>
-        </i:Interaction.Triggers>
-        <Image Source="{Binding ImageSource.Value}" Stretch="None" />
-        <Canvas x:Name="canvas" Background="{Binding Background.Value}" />
-    </Grid>
+    <Border BorderBrush="#FF865fc5" BorderThickness="2,0,2,2">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="auto" />
+            </Grid.RowDefinitions>
+            <Grid
+                x:Name="TitleBar"
+                Grid.Row="0"
+                Background="#FF865fc5">
+                <TextBlock
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    Foreground="White"
+                    Text="OpticalTextSelector" />
+
+                <Button
+                    Width="40"
+                    Margin="2,2,0,2"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    Background="White"
+                    Click="CloseButtonClick"
+                    Content="X"
+                    FontWeight="Bold"
+                    Foreground="Black" />
+            </Grid>
+
+            <Grid Grid.Row="1" Background="{Binding WindowBackground.Value}">
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="MouseMove">
+                        <prism:InvokeCommandAction Command="{Binding MouseMoveCommand}" />
+                    </i:EventTrigger>
+                    <i:EventTrigger EventName="MouseLeftButtonUp">
+                        <prism:InvokeCommandAction Command="{Binding MouseLeftButtonUpCommand}" />
+                    </i:EventTrigger>
+                    <i:EventTrigger EventName="MouseLeftButtonDown">
+                        <prism:InvokeCommandAction Command="{Binding MouseLeftButtonDownCommand}" />
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
+                <Image
+                    IsHitTestVisible="False"
+                    Source="{Binding ImageSource.Value}"
+                    Stretch="None" />
+                <Canvas x:Name="canvas" IsHitTestVisible="False" />
+            </Grid>
+
+            <UniformGrid Grid.Row="2" Rows="1">
+                <Button
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Center"
+                    Background="{Binding ResetBackground.Value}"
+                    Command="{Binding ResetCommand}"
+                    Content="RESET"
+                    Foreground="{Binding ResetForeground.Value}" />
+                <Button
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Center"
+                    Background="{Binding SnapshotBackground.Value}"
+                    Command="{Binding SnapshotCommand}"
+                    Content="SNAPSHOT"
+                    Foreground="{Binding SnapshotForeground.Value}" />
+            </UniformGrid>
+        </Grid>
+    </Border>
+
 </Window>

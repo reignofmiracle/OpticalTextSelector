@@ -16,85 +16,137 @@ namespace OpticalTextSelector
         TesseractManager tesseractManager;
         SelectionManager selectionManager;
 
-        KeyboardHook keyboardHook = new KeyboardHook();
+        bool isMouseLeftButtonDown;
+        Point? mouseLeftButtonDownPosition;
+        Rect? selectionRect;
 
-        bool isActive = false;
+        bool isSnapshot = false;
 
-        List<Point> selectionArea = new List<Point>();
+        SolidColorBrush windowResetBackgroundColor = new SolidColorBrush(Colors.Transparent);
+        SolidColorBrush windowSnapshotBackgroundColor = new SolidColorBrush(Color.FromArgb(1, 0, 0, 0));
+
+        SolidColorBrush buttonTrueBackgroundColor = new SolidColorBrush(Color.FromRgb(134, 95, 197));
+        SolidColorBrush buttonTrueForegroundColor = new SolidColorBrush(Colors.White);
+
+        SolidColorBrush buttonFalseBackgroundColor = new SolidColorBrush(Colors.White);
+        SolidColorBrush buttonFalseForegroundColor = new SolidColorBrush(Colors.Black);
 
         public MainViewModel(Canvas canvas)
         {
-            this.tesseractManager = new TesseractManager("tessdata");
+            this.tesseractManager = new TesseractManager(canvas, "tessdata");
             this.selectionManager = new SelectionManager(canvas);
 
-            this.keyboardHook.events
-                .Where(e => e != null && e.Key == System.Windows.Forms.Keys.Q && e.Control && e.IsKeyDown)
-                .Throttle(TimeSpan.FromMilliseconds(50))
-                .ObserveOnDispatcher()
-                .Subscribe(e =>
-            {
-                this.isActive = !this.isActive;
-
-                if (this.isActive)
+            this.MouseLeftButtonDownCommand
+                .Subscribe(v =>
                 {
-                    this.Background.Value = new SolidColorBrush(Color.FromArgb(1, 0, 0, 0));
+                    this.isMouseLeftButtonDown = true;
 
-                    if (this.tesseractManager.Process())
+                    if (mouseLeftButtonDownPosition == null)
                     {
-                        this.ImageSource.Value = this.tesseractManager.BitmapImage;
-
-                        this.selectionManager.Reset(this.tesseractManager.WordDictionary);
+                        mouseLeftButtonDownPosition = v.GetPosition(v.Source as IInputElement);
                     }
-                }
-                else
-                {
-                    this.Background.Value = new SolidColorBrush(Colors.Transparent);
-
-                    this.ImageSource.Value = null;
-                }
-            });
-
-            Observable.Merge(
-                this.MouseLeftButtonUpCommand.Select(v => false),
-                this.MouseLeftButtonDownCommand.Select(v => true))
-                .CombineLatest(this.MouseMoveCommand.Cast<MouseEventArgs>())
-                .Where(v => v.First)
-                .Do(v => this.selectionArea.Add(v.Second.GetPosition(v.Second.Source as IInputElement)))
-                .Throttle(TimeSpan.FromMilliseconds(100))
-                .ObserveOnDispatcher()
-                .Subscribe(_ =>
-                {
-                    var source = this.selectionArea;
-                    this.selectionArea = new List<Point>();
-
-                    var rect = union(source);
-                    this.selectionManager.Select(rect);
                 });
+
+            this.MouseLeftButtonUpCommand
+                .Subscribe(v =>
+                {
+                    if (this.selectionRect != null)
+                    {
+                        this.selectionManager.Select((Rect)this.selectionRect);
+                    }
+
+                    this.isMouseLeftButtonDown = false;
+
+                    this.mouseLeftButtonDownPosition = null;
+
+                    this.selectionRect = null;
+                });
+
+            this.MouseMoveCommand
+                .Where(_ => this.isSnapshot && this.isMouseLeftButtonDown)
+                .Subscribe(v =>
+                {
+                    var startPosition = (Point)mouseLeftButtonDownPosition;
+                    var endPosition = v.GetPosition(v.Source as IInputElement);
+
+                    this.selectionRect = GetRect(startPosition, endPosition);
+                    this.selectionManager.UpdateSelectionBox((Rect)this.selectionRect);                    
+                });
+            
+            this.ResetCommand.Subscribe(Reset);
+            this.SnapshotCommand.Subscribe(Snapshot);            
+
+            SetColors(true);
         }
 
-        public ReactivePropertySlim<Brush> Background { get; } = new ReactivePropertySlim<Brush>();
+        public ReactivePropertySlim<Brush> WindowBackground { get; } = new ReactivePropertySlim<Brush>();
         public ReactivePropertySlim<ImageSource> ImageSource { get; } = new ReactivePropertySlim<ImageSource>();
 
-        public ReactiveCommand MouseMoveCommand { get; } = new ReactiveCommand();
-        public ReactiveCommand MouseLeftButtonUpCommand { get; } = new ReactiveCommand();
-        public ReactiveCommand MouseLeftButtonDownCommand { get; } = new ReactiveCommand();
+        public ReactiveCommand<MouseEventArgs> MouseMoveCommand { get; } = new ReactiveCommand<MouseEventArgs>();
+        public ReactiveCommand<MouseButtonEventArgs> MouseLeftButtonUpCommand { get; } = new ReactiveCommand<MouseButtonEventArgs>();
+        public ReactiveCommand<MouseButtonEventArgs> MouseLeftButtonDownCommand { get; } = new ReactiveCommand<MouseButtonEventArgs>();
 
-        private Rect union(List<Point> selectionArea)
+        public ReactivePropertySlim<Brush> ResetBackground { get; } = new ReactivePropertySlim<Brush>();
+        public ReactivePropertySlim<Brush> ResetForeground { get; } = new ReactivePropertySlim<Brush>();
+        public ReactiveCommand ResetCommand { get; } = new ReactiveCommand();
+        public ReactivePropertySlim<Brush> SnapshotBackground { get; } = new ReactivePropertySlim<Brush>();
+        public ReactivePropertySlim<Brush> SnapshotForeground { get; } = new ReactivePropertySlim<Brush>();
+        public ReactiveCommand SnapshotCommand { get; } = new ReactiveCommand();
+
+        private Rect GetRect(Point start, Point end)
         {
-            var first = selectionArea[0];
-            var rect = new Rect(first.X, first.Y, 0, 0);
+            var left = Math.Min(start.X, end.X);
+            var top = Math.Min(start.Y, end.Y);
+            var width = Math.Abs(start.X - end.X);
+            var height = Math.Abs(start.Y - end.Y);
+            return new Rect(left, top, width, height);
+        }
 
-            foreach (var item in selectionArea)
+        private void Reset()
+        {
+            this.isSnapshot = false;
+
+            SetColors(true);
+
+            this.ImageSource.Value = null;
+            this.selectionManager.Clear();
+        }
+
+        private void Snapshot()
+        {           
+            SetColors(false);
+
+            if (this.tesseractManager.Process())
             {
-                if (rect.Contains(item.X, item.Y))
-                {
-                    continue;
-                }
-
-                rect.Union(new Rect(item.X, item.Y, 0, 0));
+                this.ImageSource.Value = this.tesseractManager.BitmapImage;
+                this.selectionManager.Reset(this.tesseractManager.ResultWords);
             }
 
-            return rect;
+            this.isSnapshot = true;
+        }
+
+        private void SetColors(bool isReset)
+        {
+            if (isReset)
+            {
+                this.WindowBackground.Value = this.windowResetBackgroundColor;
+
+                this.ResetBackground.Value = this.buttonTrueBackgroundColor;
+                this.ResetForeground.Value = this.buttonTrueForegroundColor;
+
+                this.SnapshotBackground.Value = this.buttonFalseBackgroundColor;
+                this.SnapshotForeground.Value = this.buttonFalseForegroundColor;
+            } 
+            else
+            {
+                this.WindowBackground.Value = this.windowSnapshotBackgroundColor;
+
+                this.ResetBackground.Value = this.buttonFalseBackgroundColor;
+                this.ResetForeground.Value = this.buttonFalseForegroundColor;
+
+                this.SnapshotBackground.Value = this.buttonTrueBackgroundColor;
+                this.SnapshotForeground.Value = this.buttonTrueForegroundColor;
+            }
         }
     }
 }
