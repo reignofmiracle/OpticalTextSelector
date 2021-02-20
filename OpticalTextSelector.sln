@@ -5,8 +5,6 @@ VisualStudioVersion = 16.0.30611.23
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpticalTextSelector", "OpticalTextSelector\OpticalTextSelector.csproj", "{A3945D9F-419B-478B-B700-ADA332AA2128}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpticalTextSelectorTest", "OpticalTextSelectorTest\OpticalTextSelectorTest.csproj", "{80F261B9-EACB-457D-B874-15574EC64E63}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -16,9 +14,6 @@ Global
 		{A3945D9F-419B-478B-B700-ADA332AA2128}.Debug|x64.ActiveCfg = Debug|x64
 		{A3945D9F-419B-478B-B700-ADA332AA2128}.Debug|x64.Build.0 = Debug|x64
 		{A3945D9F-419B-478B-B700-ADA332AA2128}.Release|x64.ActiveCfg = Release|x64
-		{80F261B9-EACB-457D-B874-15574EC64E63}.Debug|x64.ActiveCfg = Debug|x64
-		{80F261B9-EACB-457D-B874-15574EC64E63}.Debug|x64.Build.0 = Debug|x64
-		{80F261B9-EACB-457D-B874-15574EC64E63}.Release|x64.ActiveCfg = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

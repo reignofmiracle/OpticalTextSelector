@@ -28,11 +28,11 @@ namespace OpticalTextSelector
         {
             try 
             {
-                var bitmap = getBitmap();
+                var bitmap = GetBitmap();
 
                 this.BitmapImage = bitmap.Convert();
 
-                UpdateSelection(bitmap);
+                UpdateSelection(bitmap.ConvertToGrayscale());
 
                 return true;
             }
@@ -43,7 +43,7 @@ namespace OpticalTextSelector
             }            
         }
 
-        private Bitmap getBitmap()
+        private Bitmap GetBitmap()
         {
             try
             {
