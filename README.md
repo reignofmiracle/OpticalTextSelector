@@ -1,12 +1,12 @@
-+ OpticalTextSelector
+# OpticalTextSelector
 
-++ simple ocr & copy clipboard
+- simple ocr + copy clipboard
 
-++ snapshot 
+## snapshot 
 - move window
 - snapshot
 - select text with mouse drag
 - use clipboard
 
-++ reset
+## reset
 - clear snapshot
